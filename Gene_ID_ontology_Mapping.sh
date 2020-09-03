@@ -219,3 +219,28 @@ grep "ENSG.*ENSG" Homo_sapiens.gene_info.map | wc -l ## 66
 ## B) In Gencode
 tail -n+2 gencode.v35.map | grep -v "_PAR_Y" | awk -F"\t" '{if($4!="")print $4}' | sort | uniq -c | sort -k1,1nr | awk '{if($1>1)print $2}' > dup.Enterz_ids
 awk 'BEGIN{FS=OFS="\t"}FNR==NR{a[$1]=1;next}{if(a[$4]==1)print $1,$2,$4,$3}' dup.Enterz_ids gencode.v35.map | sort -k3,3nr  ## There are 45 sets (44 pairs and an additional set of 3) of Gencode IDs where each set maps to one Entrez IDs. In most sets, the genes have different symbols and HGNC IDs
+
+######################################################################################
+#### 4. Ambiguity of gene symbols across multiple species
+
+# Download HGNC dataset from the "Custom downloads" page
+# Select these columns: HGNC ID Approved symbol Status  Mouse genome database ID        Mouse genome database ID(supplied by MGI)       Rat genome database ID(supplied by RGD)
+# Submit and save output webpage as custom_ortho.txt
+
+## a) analysis for the column of Mouse genome database ID(supplied by MGI)
+tail -n+2 custom_ortho.txt | awk 'BEGIN{FS=OFS="\t"}{if($3=="Approved" && ($4!="" || $5!=""))print $1,$4,$5}' > HGNC-to-Mouse.hgnc-custom
+cat HGNC-to-Mouse.hgnc-custom | awk 'BEGIN{FS=OFS="\t"}{if($3!="")print $3}' | wc -l ## 18206
+cat HGNC-to-Mouse.hgnc-custom | awk 'BEGIN{FS=OFS="\t"}{if($3!="")print $3}' | sort | uniq | wc -l ## 17976
+cat HGNC-to-Mouse.hgnc-custom | awk 'BEGIN{FS=OFS="\t"}{if($3!="")print $3}' | sort | uniq -c | sort -k1,1nr | awk '{if($1>1)a+=$1}END{print a}' ## 413 
+cat HGNC-to-Mouse.hgnc-custom | awk 'BEGIN{FS=OFS="\t"}{if($3!="")print $3}' | sort | uniq -c | sort -k1,1nr | awk '{if($1>1)print $0}' | wc -l ## 183
+cat HGNC-to-Mouse.hgnc-custom | awk 'BEGIN{FS=OFS="\t"}{if($3!="")print $3}' | grep "," | wc -l ## 416
+cat HGNC-to-Mouse.hgnc-custom | awk 'BEGIN{FS=OFS="\t"}{if($3!="")print $1,$3}' | awk -F"," '{print NF}' | sort -nr | head  ## 15
+cat HGNC-to-Mouse.hgnc-custom | awk 'BEGIN{FS=OFS="\t"}{if($3!="")print $1,$3}' | awk -F"," '{if(NF==15) print $0}' 
+
+## b) analysis for the column of curated Mouse genome database ID
+cat HGNC-to-Mouse.hgnc-custom | awk 'BEGIN{FS=OFS="\t"}{if($2!="")print $2}' | wc -l ## 17692
+cat HGNC-to-Mouse.hgnc-custom | awk 'BEGIN{FS=OFS="\t"}{if($2!="")print $2}' | sort | uniq | wc -l ## 17561
+cat HGNC-to-Mouse.hgnc-custom | awk 'BEGIN{FS=OFS="\t"}{if($2!="" && $2==$3)print $0}' | wc -l ## 17515 
+cat HGNC-to-Mouse.hgnc-custom | awk 'BEGIN{FS=OFS="\t"}{if($2!="" && $3=="")print $0}' | wc -l ## 3
+cat HGNC-to-Mouse.hgnc-custom | awk 'BEGIN{FS=OFS="\t"}{if($2!="" && $3!="" && $2!=$3)print $0}' | wc -l ## 174 
+
