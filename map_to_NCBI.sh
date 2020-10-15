@@ -142,7 +142,69 @@ cat dup_ncbi2_ids.discard | awk -F"\t" '{print $4}' | sort | uniq -c | sort -k2,
 tail -n+2 Homo_sapiens.gene_info.ID_to_symbol.ens2.sim3 | awk -F"\t" '{print $4}' | sort | uniq -c | sort -k2,2n
 
 
+####################################################################################################
+#### what is the best ENS converter to NCBI
+#1. NCBI:
+tail -n+2 Homo_sapiens.gene_info.ID_to_symbol | awk -F"\t" '{if($4!="")print $4}' | sort | uniq > ncbi_to_ens.ids ## 34954
+tail -n+2 Homo_sapiens.gene_info.ID_to_symbol | awk -F"\t" '{if($4!="")print $1}' | sort | uniq > convertable_ncbi_ids ## 35049
+#2. HGNC: 
+tail -n+2 hgnc_complete_set.txt | awk -F"\t" '{if($20!="")print $20}' | sort | uniq > hgnc_to_ens.ids ## 39252
+tail -n+2 hgnc_complete_set.txt | awk -F"\t" '{if($20!="")print $1}' | sort | uniq > convertable_hgnc_ids ## 39255
+#3. Ensembl:
+tail -n+2 gencode.v35.gene.annotation.EntrezGene | awk -F"\t" '{if($1!="")print $2}' | sort | uniq > ens_to_ncbi.ids ## 25578
+tail -n+2 gencode.v35.gene.annotation.EntrezGene | awk -F"\t" '{if($1!="")print $1}' | sort | uniq > ncbi_ids_in_ensTable ## 25532
+tail -n+2 gencode.v35.gene.annotation.EntrezGene | awk -F"\t" '{if($6!="")print $2}' | sort | uniq > ens_to_hgnc.ids ## 38560
+tail -n+2 gencode.v35.gene.annotation.EntrezGene | awk -F"\t" '{if($6!="")print $6}' | sort | uniq > hgnc_ids_in_ensTable ## 38543
+tail -n+2 gencode.v35.gene.annotation.EntrezGene | awk -F"\t" '{print $2}' | sort | uniq > ens_ids_in_currentAnn ## 60612
+#4. My conversion table
+tail -n+2 Homo_sapiens.gene_info.ID_to_symbol.ens | awk -F"\t" '{if($26 > -2 && $26 !=0)print $25}' | sort | uniq > my_ens.ids ## 41566
+tail -n+2 Homo_sapiens.gene_info.ID_to_symbol.ens2.sim3 | awk -F"\t" '{print $2}' | sort | uniq > my_ens2.sim3.ids ## 41596
+cat dup_ncbi2_ids.discard | awk -F"\t" '{print $2}' | sort | uniq > my_ens2.discard.ids ## 121
+
+comm -12 convertable_ncbi_ids ncbi_ids_in_ensTable | wc -l ## 25379
+comm -12 convertable_hgnc_ids hgnc_ids_in_ensTable | wc -l ## 38539
 
 
+gtex="DBRetina/DBprep/gtex"
+tail -n+4 $gtex/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct | awk -F"\t" '{sub(/\..*/,"",$1);print $1}' | sort | uniq > all.ids ## 56156
+tail -n+2 $gtex/hiExp.tab | awk -F"\t" '{sub(/\..*/,"",$1);print $1}' | sort | uniq > hiExp.ids ## 31867
+tail -n+2 $gtex/filtered_nodup_all_clusters_tis_sig | awk -F"\t" '{sub(/\..*/,"",$1);print $1}' | sort | uniq > all_tis.ids ## 19465
+tail -n+2 $gtex/sig_all_clusters | awk -F"\t" '{sub(/\..*/,"",$1);print $1}' | sort | uniq > sig100_all_tis.ids ## 2944
+
+comm -12 all.ids ens_ids_in_currentAnn | wc -l
+comm -12 all.ids ncbi_to_ens.ids | wc -l
+comm -12 all.ids hgnc_to_ens.ids | wc -l
+comm -12 all.ids ens_to_ncbi.ids | wc -l
+comm -12 all.ids ens_to_hgnc.ids | wc -l
+comm -12 all.ids my_ens.ids | wc -l
+comm -12 all.ids my_ens2.sim3.ids | wc -l
+comm -12 all.ids my_ens2.discard.ids | wc -l
+
+comm -12 hiExp.ids ens_ids_in_currentAnn | wc -l
+comm -12 hiExp.ids ncbi_to_ens.ids | wc -l
+comm -12 hiExp.ids hgnc_to_ens.ids | wc -l
+comm -12 hiExp.ids ens_to_ncbi.ids | wc -l
+comm -12 hiExp.ids ens_to_hgnc.ids | wc -l
+comm -12 hiExp.ids my_ens.ids | wc -l
+comm -12 hiExp.ids my_ens2.sim3.ids | wc -l
+comm -12 hiExp.ids my_ens2.discard.ids | wc -l
+
+comm -12 all_tis.ids ens_ids_in_currentAnn | wc -l
+comm -12 all_tis.ids ncbi_to_ens.ids | wc -l
+comm -12 all_tis.ids hgnc_to_ens.ids | wc -l
+comm -12 all_tis.ids ens_to_ncbi.ids | wc -l
+comm -12 all_tis.ids ens_to_hgnc.ids | wc -l
+comm -12 all_tis.ids my_ens.ids | wc -l
+comm -12 all_tis.ids my_ens2.sim3.ids | wc -l
+comm -12 all_tis.ids my_ens2.discard.ids | wc -l
+
+comm -12 sig100_all_tis.ids ens_ids_in_currentAnn | wc -l
+comm -12 sig100_all_tis.ids ncbi_to_ens.ids | wc -l
+comm -12 sig100_all_tis.ids hgnc_to_ens.ids | wc -l
+comm -12 sig100_all_tis.ids ens_to_ncbi.ids | wc -l
+comm -12 sig100_all_tis.ids ens_to_hgnc.ids | wc -l
+comm -12 sig100_all_tis.ids my_ens.ids | wc -l
+comm -12 sig100_all_tis.ids my_ens2.sim3.ids | wc -l
+comm -12 sig100_all_tis.ids my_ens2.discard.ids | wc -l
 
 
